@@ -1,0 +1,6 @@
+[submodule "3rd_party/ApexLib"]
+	path = 3rd_party/ApexLib
+	url = https://github.com/PredatorCZ/ApexLib.git
+[submodule "3rd_party/Xplorer"]
+	path = 3rd_party/Xplorer
+	url = https://github.com/PredatorCZ/Xplorer.git
