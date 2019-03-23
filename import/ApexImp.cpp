@@ -209,8 +209,8 @@ public:
 	{
 		Object *refobj = node->EvalWorldState(0).obj;
 
-		if ((refobj->ClassID() == Class_ID(DUMMY_CLASS_ID, 0) || refobj->ClassID() == Class_ID(BONE_CLASS_ID, 0) || refobj->ClassID() == BONE_OBJ_CLASSID))
-		{
+		//if ((refobj->ClassID() == Class_ID(DUMMY_CLASS_ID, 0) || refobj->ClassID() == Class_ID(BONE_CLASS_ID, 0) || refobj->ClassID() == BONE_OBJ_CLASSID))
+		//{
 			if (node->UserPropExists(skelNameHint))
 			{
 				MSTR skelName;
@@ -232,7 +232,7 @@ public:
 
 				bones.push_back(node);
 			}	
-		}
+		//}
 		
 		return TREE_CONTINUE;
 	}
@@ -760,10 +760,23 @@ int ApexImp::LoadModel(IADF *adf)
 	if (_test)
 		for (auto &m : mod->materials)
 		{
-			materials[m->name->hash] = CreateMaterial(m);
+			bool forced = m->materialType == AmfMaterial::MaterialType_PBR && flags[IDC_CH_FORCESTDMAT_checked];
+
+			if (forced)
+				m->materialType = AmfMaterial::MaterialType_Traditional;
+
+			Mtl *cMat = CreateMaterial(m);
+
+			if (flags[IDC_CH_ENABLEVIEWMAT_checked])
+				GetCOREInterface()->ActivateTexture(cMat, cMat);
+
+			materials[m->name->hash] = cMat;
 
 			if (flags[IDC_CH_DUMPMATINFO_checked])
 				DumpMaterialProps(m);
+
+			if (forced)
+				m->materialType = AmfMaterial::MaterialType_PBR;
 		}
 
 	for (auto &lod : msh->lodGroups)

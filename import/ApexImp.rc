@@ -69,21 +69,25 @@ END
 // Dialog
 //
 
-IDD_PANEL DIALOGEX 0, 0, 139, 92
+IDD_PANEL DIALOGEX 0, 0, 139, 135
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 EXSTYLE WS_EX_TOOLWINDOW | WS_EX_CONTEXTHELP
 FONT 8, "MS Sans Serif", 0, 0, 0x1
 BEGIN
-    CONTROL         "",IDC_EDIT_SCALE,"CustEdit",WS_TABSTOP,33,51,35,10
-    CONTROL         "",IDC_SPIN_SCALE,"SpinnerControl",0x0,69,51,7,10
-    LTEXT           "Scale",IDC_STATIC,9,51,19,8
-    CONTROL         "Keep debug info in name",IDC_CH_DEBUGNAME,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,6,95,10
-    PUSHBUTTON      "Import",IDC_BT_DONE,6,72,50,14
-    PUSHBUTTON      "Cancel",IDC_BT_CANCEL,81,72,50,14
-    PUSHBUTTON      "?",IDC_BT_ABOUT,60,72,18,14
-    CONTROL         "Dump material infos in listener",IDC_CH_DUMPMATINFO,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,21,109,10
-    CONTROL         "Clear listener",IDC_CH_CLEARLISTENER,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,36,56,10
+    CONTROL         "",IDC_EDIT_SCALE,"CustEdit",WS_TABSTOP,33,92,35,10
+    CONTROL         "",IDC_SPIN_SCALE,"SpinnerControl",0x0,69,92,7,10
+    LTEXT           "Scale",IDC_STATIC,9,92,19,8
+    CONTROL         "Keep debug info in node name",IDC_CH_DEBUGNAME,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,6,113,10
+    PUSHBUTTON      "Import",IDC_BT_DONE,6,113,50,14
+    PUSHBUTTON      "Cancel",IDC_BT_CANCEL,81,113,50,14
+    PUSHBUTTON      "?",IDC_BT_ABOUT,60,113,18,14
+    CONTROL         "Dump material infos into listener",IDC_CH_DUMPMATINFO,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,21,115,10
+    CONTROL         "Clear listener before import",IDC_CH_CLEARLISTENER,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,36,99,10
+    CONTROL         "Force standard material",IDC_CH_FORCESTDMAT,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,52,89,10
+    CONTROL         "Enable materials in viewport",IDC_CH_ENABLEVIEWMAT,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,68,103,10
 END
 
 
@@ -100,7 +104,7 @@ BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 102
         TOPMARGIN, 7
-        BOTTOMMARGIN, 38
+        BOTTOMMARGIN, 81
     END
 END
 #endif    // APSTUDIO_INVOKED

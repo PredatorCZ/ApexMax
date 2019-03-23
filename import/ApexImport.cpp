@@ -44,9 +44,11 @@ void ApexImport::LoadCFG()
 	BuildCFG();
 	TCHAR buffer[16];
 	GetCFGChecked(IDC_CH_DEBUGNAME);
-	GetCFGCValue(IDC_EDIT_SCALE);
+	GetCFGValue(IDC_EDIT_SCALE);
 	GetCFGChecked(IDC_CH_DUMPMATINFO);
 	GetCFGChecked(IDC_CH_CLEARLISTENER);
+	GetCFGChecked(IDC_CH_FORCESTDMAT);
+	GetCFGChecked(IDC_CH_ENABLEVIEWMAT);
 }
 
 void ApexImport::SaveCFG()
@@ -56,6 +58,8 @@ void ApexImport::SaveCFG()
 	SetCFGChecked(IDC_CH_DEBUGNAME);
 	SetCFGChecked(IDC_CH_DUMPMATINFO);
 	SetCFGChecked(IDC_CH_CLEARLISTENER);
+	SetCFGChecked(IDC_CH_FORCESTDMAT);
+	SetCFGChecked(IDC_CH_ENABLEVIEWMAT);
 
 	TCHAR buffer[16];
 	SetCFGValue(IDC_EDIT_SCALE);
@@ -104,6 +108,8 @@ static INT_PTR CALLBACK DialogCallbacks(HWND hWnd, UINT message, WPARAM wParam, 
 			MSGCheckbox(IDC_CH_DEBUGNAME); break;
 			MSGCheckbox(IDC_CH_DUMPMATINFO); break;
 			MSGCheckbox(IDC_CH_CLEARLISTENER); break;
+			MSGCheckbox(IDC_CH_FORCESTDMAT); break;
+			MSGCheckbox(IDC_CH_ENABLEVIEWMAT); break;
 		}
 
 	case CC_SPINNER_CHANGE:

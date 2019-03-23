@@ -20,6 +20,9 @@
 #define IDC_CH_DUMPMATINFO              1001
 #define IDC_CHECK2                      1002
 #define IDC_CH_CLEARLISTENER            1002
+#define IDC_CH_FORCESTDMAT              1003
+#define IDC_CH_FORCESTDMAT2             1004
+#define IDC_CH_ENABLEVIEWMAT            1004
 #define IDC_COLOR                       1456
 #define IDC_EDIT                        1490
 #define IDC_SPIN                        1496

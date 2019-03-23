@@ -35,6 +35,8 @@ public:
 		IDConfigBool(IDC_CH_DEBUGNAME),
 		IDConfigBool(IDC_CH_DUMPMATINFO),
 		IDConfigBool(IDC_CH_CLEARLISTENER),
+		IDConfigBool(IDC_CH_FORCESTDMAT),
+		IDConfigBool(IDC_CH_ENABLEVIEWMAT),
 	};
 
 	NewIDConfigValue(IDC_EDIT_SCALE);
