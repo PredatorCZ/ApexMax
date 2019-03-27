@@ -1,9 +1,9 @@
 # ApexMax
 ApexMax is Apex Engine importer for 3ds Max. Buildable under VS2015.
 
-Supported 3ds max versions: 2012 - 2019
+Supported 3ds max versions: **2012 - 2019**
 
-Tested on 3ds max versions: 2017
+Tested on 3ds max versions: **2017**
 
 ## Editing .vcxproj
 All essential configurations are within **PropertyGroup Label="MAXConfigurations"** field.
@@ -22,3 +22,4 @@ This plugin is available under GPL v3 license. (See LICENSE.md)
 This plugin uses following libraries:
 
 * ApexLib, Copyright (c) 2014-2019 Lukas Cone
+* Xplorer, Copyright (c) 2019 Lukas Cone
