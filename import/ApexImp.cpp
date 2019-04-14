@@ -558,20 +558,6 @@ void LoadSkin(AmfMesh *mesh, INode *nde)
 {
 	INodeTab bones;
 	const int numVerts = mesh->Header.vertexCount;
-
-	Modifier *cmod = static_cast<Modifier*>(GetCOREInterface()->CreateInstance(OSM_CLASS_ID, SKIN_CLASSID));
-	GetCOREInterface7()->AddModifier(*nde, *cmod);
-	ISkinImportData *cskin = static_cast<ISkinImportData*>(cmod->GetInterface(I_SKINIMPORTDATA));
-
-	for (auto &b : mesh->boneIndexLookup)
-	{
-		INode *cnde = iBoneScanner.LookupNode(b);
-		bones.AppendNode(cnde);
-		cskin->AddBoneEx(cnde, 0);
-	}
-
-	nde->EvalWorldState(0);
-
 	std::vector<AmfStreamAttribute*> weights;
 	std::vector<AmfStreamAttribute*> bonesids;
 
@@ -587,6 +573,22 @@ void LoadSkin(AmfMesh *mesh, INode *nde)
 			break;
 		}
 	}
+
+	if (!bonesids.size())
+		return;
+
+	Modifier *cmod = static_cast<Modifier*>(GetCOREInterface()->CreateInstance(OSM_CLASS_ID, SKIN_CLASSID));
+	GetCOREInterface7()->AddModifier(*nde, *cmod);
+	ISkinImportData *cskin = static_cast<ISkinImportData*>(cmod->GetInterface(I_SKINIMPORTDATA));
+
+	for (auto &b : mesh->boneIndexLookup)
+	{
+		INode *cnde = iBoneScanner.LookupNode(b);
+		bones.AppendNode(cnde);
+		cskin->AddBoneEx(cnde, 0);
+	}
+
+	nde->EvalWorldState(0);	
 
 	if (!weights.size())
 	{
