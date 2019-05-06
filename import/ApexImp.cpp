@@ -240,6 +240,11 @@ public:
 
 INodeSuffixer ApexImp::LoadMesh(AmfMesh *imsh)
 {
+	INodeSuffixer nde;
+
+	if (!imsh->properlyLinked)
+		return nde;
+
 	TriObject *obj = CreateNewTriObject();
 	Mesh *msh = &obj->GetMesh();
 
@@ -248,8 +253,7 @@ INodeSuffixer ApexImp::LoadMesh(AmfMesh *imsh)
 
 	const int numVerts = msh->numVerts;
 	const int numFaces = msh->numFaces;
-	int currentMap = 1;
-	INodeSuffixer nde;
+	int currentMap = 1;	
 	int matid = 0;
 
 	for (auto &d : imsh->streamAttributes)
@@ -721,7 +725,7 @@ void DumpMaterialProps(AmfMaterial *mat)
 	if (!mat->attributes)
 		return;
 
-	IReflector *refl = dynamic_cast<IReflector*>(mat->attributes);
+	Reflector *refl = dynamic_cast<Reflector*>(mat->attributes);
 
 	if (!refl)
 		return;
@@ -735,7 +739,7 @@ void DumpMaterialProps(AmfMaterial *mat)
 
 	for (int t = 0; t < numReflValues; t++)
 	{
-		const IReflector::KVPair &pair = refl->GetReflectedPair(t);
+		const Reflector::KVPair &pair = refl->GetReflectedPair(t);
 
 		printer << '\t' << esString(pair.name) << " = " << esString(pair.value) >> 1;
 	}
@@ -796,6 +800,13 @@ int ApexImp::LoadModel(IADF *adf)
 		for (auto &m : lod.meshes)
 		{
 			INodeSuffixer nde = LoadMesh(&m);
+
+			if (!nde.node)
+			{
+				TSTRING ndeName = static_cast<TSTRING>(esString(m.subMeshes[0].meshName->string));
+				printerror("[Apex] Couldn't import model: ", << ndeName << " LOD: " << lod.Header.index);
+				continue;
+			}
 
 			if (m.subMeshes.size() > 1)
 			{
