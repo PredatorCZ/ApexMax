@@ -1056,20 +1056,20 @@ ADFMATERIAL(RBMCharacter6)
 
 	layer = diffComposite.GetLayer(1);
 	layer.BlendMode(CompositeTex::Normal);
-	layer.Map(textures[8]);
+	layer.Map(textures.size() > 8 ? textures[8] : nullptr);
 
-	layer = diffComposite.GetLayer(3);
+	layer = diffComposite.GetLayer(2);
 	layer.BlendMode(CompositeTex::Average);
 	IColorVar *var = IColorVar::Create();
 	var->SetName(_T("Blood Blend"));
 	layer.Mask(var);
 	layer.Map(textures[6]);
 
-	layer = diffComposite.GetLayer(4);
+	layer = diffComposite.GetLayer(3);
 	layer.BlendMode(CompositeTex::Average);
 	layer.Map(textures[3]);
 
-	layer = diffComposite.GetLayer(5);
+	layer = diffComposite.GetLayer(4);
 	layer.BlendMode(CompositeTex::Add);
 	layer.Map(textures[0]);
 
@@ -2062,6 +2062,525 @@ ADFMATERIAL_WPROPS(GeneralConstants)
 	material->SetSubTexmap(dispMap, tess);
 }
 
+ADFMATERIAL_WPROPS(GeneralR2Constants)
+{
+	/*
+	0 diff
+	1 nrm
+	2 mpm
+	3 null
+	4 emisive
+	5 detail diff
+	6 detail nrm
+	7 blend mask, uv2, red 1-2, green red-3?
+	8 diff 2, uv2
+	9 nrm 2, uv2
+	10 mpm2, uv2
+	11 decal? always dummy
+	12 tint, uv2 (average?)
+	13 nrm, always dummy
+	14 diff 3
+	15 nrm 3
+	16 mpm 3
+	17 color var mask
+	*/
+
+	GeneralR2Constants *props = static_cast<GeneralR2Constants *>(properties->GetProperties());
+
+	int baseColorMap = ID_DI;
+	int bumpMap = ID_BU;
+	int roughnesMap = ID_SS;
+	int opacityMap = ID_OP;
+	int emissiveMap = ID_SI;
+	int metallicMap = ID_SH;
+
+	if (textures[7])
+		textures[7]->GetUVGen()->SetMapChannel(2);
+
+	if (textures[8])
+		textures[8]->GetUVGen()->SetMapChannel(2);
+
+	if (textures[9])
+		textures[9]->GetUVGen()->SetMapChannel(2);
+
+	if (textures[10])
+		textures[10]->GetUVGen()->SetMapChannel(2);
+
+	if (textures[12] && props->flags[GeneralR2ConstantsFlags::tintUV2])
+		textures[12]->GetUVGen()->SetMapChannel(2);
+
+	if (textures[17])
+		textures[17]->GetUVGen()->SetMapChannel(2);
+
+	if (textures[5])
+	{
+		textures[5]->GetUVGen()->SetUScl(props->detailRepeatU, 0);
+		textures[5]->GetUVGen()->SetVScl(props->detailRepeatV, 0);
+
+		if (props->flags[GeneralR2ConstantsFlags::detailUV2])
+			textures[5]->GetUVGen()->SetMapChannel(2);
+	}
+
+	if (textures[6])
+	{
+		textures[6]->GetUVGen()->SetUScl(props->detailRepeatU, 0);
+		textures[6]->GetUVGen()->SetVScl(props->detailRepeatV, 0);
+
+		if (props->flags[GeneralR2ConstantsFlags::detailUV2])
+			textures[6]->GetUVGen()->SetMapChannel(2);
+	}
+
+	if (material->ClassID() == PHYSIC_MAT_CLASSID)
+	{
+		baseColorMap = PhysicalMaterial::BaseColorMap;
+		bumpMap = PhysicalMaterial::BumpMap;
+		roughnesMap = PhysicalMaterial::RoughnessMap;
+		opacityMap = PhysicalMaterial::CutoutMap;
+		emissiveMap = PhysicalMaterial::EmissionColorMap;
+		metallicMap = PhysicalMaterial::MetalnessMap;
+	}
+
+	IColorMask *mask = IColorMask::Create();
+	mask->SetSubTexmap(0, textures[7]);
+	mask->SetDecomposeType(Decompose_Red);
+
+	Texmap *diff = Mix(RGBMultiply(textures[0], textures[5]), textures[8], mask);
+	Texmap *bump = Mix(RGBMultiply(textures[1], textures[6]), textures[9], mask);
+	Texmap *mpm = Mix(textures[2], textures[10], mask);
+
+	mask = IColorMask::Create();
+	mask->SetSubTexmap(0, textures[7]);
+	mask->SetDecomposeType(Decompose_Green);
+
+	diff = Mix(diff, textures[14], mask);
+	bump = Mix(bump, textures[15], mask);
+	mpm = Mix(mpm, textures[16], mask);
+
+	CompositeTex comp;
+	CompositeTex::Layer layer1 = comp.GetLayer(0);
+	layer1.Map(diff);
+
+	layer1 = comp.AddLayer();
+	layer1.Map(textures[12]);
+	layer1.BlendMode(CompositeTex::Average);
+
+	if (props->flags[GeneralR2ConstantsFlags::useColorMask] && textures[17])
+	{
+		IColorVar *var1 = IColorVar::Create();
+		var1->SetName(_T("Tint Color1"));
+
+		IColorVar *var2 = IColorVar::Create();
+		var2->SetName(_T("Tint Color2"));
+
+		IColorMask *mask = IColorMask::Create();
+		mask->SetSubTexmap(0, textures[17]);
+		mask->SetDecomposeType(Decompose_Red);
+
+		diff = Mix(var1, var2, mask);
+
+		var1 = IColorVar::Create();
+		var1->SetName(_T("Tint Color3"));
+
+		mask = IColorMask::Create();
+		mask->SetSubTexmap(0, textures[17]);
+		mask->SetDecomposeType(Decompose_Green);
+
+		diff = Mix(diff, var1, mask);
+
+		var1 = IColorVar::Create();
+		var1->SetName(_T("Tint Color4"));
+
+		mask = IColorMask::Create();
+		mask->SetSubTexmap(0, textures[17]);
+		mask->SetDecomposeType(Decompose_Blue);
+
+		diff = Mix(diff, var1, mask);
+
+		layer1 = comp.AddLayer();
+		layer1.Map(diff);
+		layer1.BlendMode(CompositeTex::Multiply);
+	}
+
+	diff = comp;
+
+	mask = IColorMask::Create();
+	mask->SetSubTexmap(0, mpm);
+	mask->SetDecomposeType(Decompose_Red);
+	material->SetSubTexmap(metallicMap, mask);
+
+	mask = IColorMask::Create();
+	mask->SetSubTexmap(0, mpm);
+	mask->SetDecomposeType(Decompose_Blue);
+	material->SetSubTexmap(roughnesMap, mask);
+
+	material->SetSubTexmap(baseColorMap, RGBMultiply(diff, VertexColor()));
+	material->SetSubTexmap(emissiveMap, textures[4]);
+	material->SetSubTexmap(bumpMap, NormalBump(bump));
+}
+
+ADFMATERIAL_WPROPS(GeneralMkIIIConstants) // only 1 model, Generation Zero
+{
+	GeneralMkIIIConstants *props = static_cast<GeneralMkIIIConstants *>(properties->GetProperties());
+
+	int baseColorMap = ID_DI;
+	int bumpMap = ID_BU;
+	int roughnesMap = ID_SS;
+	int metallicMap = ID_SH;
+
+	if (material->ClassID() == PHYSIC_MAT_CLASSID)
+	{
+		baseColorMap = PhysicalMaterial::BaseColorMap;
+		bumpMap = PhysicalMaterial::BumpMap;
+		roughnesMap = PhysicalMaterial::RoughnessMap;
+		metallicMap = PhysicalMaterial::MetalnessMap;
+	}
+
+	IColorMask *mask = IColorMask::Create();
+	mask->SetSubTexmap(0, textures[1]);
+	mask->SetDecomposeType(Decompose_Red);
+
+	material->SetSubTexmap(baseColorMap, textures[0]);
+	material->SetSubTexmap(roughnesMap, mask);
+	material->SetSubTexmap(metallicMap, textures[2]);
+	material->SetSubTexmap(bumpMap, NormalBump(textures[3]));
+}
+
+ADFMATERIAL_WPROPS(FoliageConstants_GZ)
+{
+	/*FoliageConstants_GZ
+	0 diff
+	1 nrm
+	2 ao
+	3 mpm
+	*/
+	RBMVegetationFoliage3MaterialLoad(properties, material, textures);
+}
+
+ADFMATERIAL(BarkConstants_GZ)
+{
+	/*BarkConstants_GZ
+	0 diff
+	1 nrm
+	2 mpm
+	3 blend mask?
+	4 dummy mask
+	5 diff 2
+	6 nrm 2
+	7 dummy black
+	8 mpm 2
+	*/
+
+	int baseColorMap = ID_DI;
+	int bumpMap = ID_BU;
+	int roughnesMap = ID_SS;
+	int metallicMap = ID_SH;
+
+	if (textures[3])
+		textures[3]->GetUVGen()->SetMapChannel(2);
+
+	if (textures[4])
+		textures[4]->GetUVGen()->SetMapChannel(2);
+
+	if (textures[0])
+	{
+		textures[0]->SetAlphaSource(ALPHA_FILE);
+		textures[0]->SetAlphaAsMono(TRUE);
+	}
+
+	if (material->ClassID() == PHYSIC_MAT_CLASSID)
+	{
+		baseColorMap = PhysicalMaterial::BaseColorMap;
+		bumpMap = PhysicalMaterial::BumpMap;
+		roughnesMap = PhysicalMaterial::RoughnessMap;
+		metallicMap = PhysicalMaterial::MetalnessMap;
+	}
+
+	Texmap *hmap = RGBMultiply(textures[3], textures[4]);
+
+	material->SetSubTexmap(baseColorMap, Mix(textures[0], textures[5], hmap));
+
+	Texmap *mpmMix = Mix(textures[2], textures[8], hmap);
+
+	IColorMask *mask = IColorMask::Create();
+	mask->SetSubTexmap(0, mpmMix);
+	mask->SetDecomposeType(Decompose_Red);
+
+	material->SetSubTexmap(metallicMap, mask);
+
+	mask = IColorMask::Create();
+	mask->SetSubTexmap(0, mpmMix);
+	mask->SetDecomposeType(Decompose_Green);
+	material->SetSubTexmap(roughnesMap, mask);
+
+	material->SetSubTexmap(bumpMap, NormalBump(Mix(textures[1], textures[6], hmap)));
+}
+
+ADFMATERIAL_WPROPS(CarLightConstants_GZ)
+{
+	/*CarLightConstants_GZ
+	0 diff
+	1 nrm
+	2 mpm
+	3 detail diff
+	4 detail nrm
+	5 emisive mask? dummy white
+	*/
+	RBMCarLightMaterialLoad(properties, material, textures);
+}
+
+ADFMATERIAL_WPROPS(GeneralJC3Constants_HU)
+{
+	/*GeneralJC3Constants_HU
+	0 diff
+	1 nrm
+	2 mpm
+	3 ao
+	*/
+	RBMGeneralSimpleMaterialLoad(properties, material, textures);
+}
+
+ADFMATERIAL_WPROPS(CarPaintMMConstants_HU)
+{
+	/*CarPaintMMConstants_HU
+	0 diff
+	1 nrm
+	2 mpm
+	3 body mask
+	4 damage nrm
+	5 damage diff
+	6 dirt mask
+	7 decal diff
+	8 decal nrm
+	9 decal mpm
+	10 detail diff, layered diff
+	11 layerred diff 2
+	*/
+	RBMCarPaint14MaterialLoad(properties, material, textures);
+}
+
+ADFMATERIAL_WPROPS(GeneralConstants_HU)
+{
+	RBMGeneralSimpleMaterialLoad(properties, material, textures);
+}
+
+ADFMATERIAL(PropConstants_HU)
+{
+	/*PropConstants_HU
+	0 diff
+	1 nrm
+	2 mpm
+	3 dummy checker
+	4 dummy mpm
+	5 dummy nrm
+	*/
+
+	int baseColorMap = ID_DI;
+	int bumpMap = ID_BU;
+	int roughnesMap = ID_SS;
+	int metallicMap = ID_SH;
+
+	if (material->ClassID() == PHYSIC_MAT_CLASSID)
+	{
+		baseColorMap = PhysicalMaterial::BaseColorMap;
+		bumpMap = PhysicalMaterial::BumpMap;
+		roughnesMap = PhysicalMaterial::RoughnessMap;
+		metallicMap = PhysicalMaterial::MetalnessMap;
+	}
+
+	material->SetSubTexmap(baseColorMap, textures[0]);
+
+	Texmap *mpmMix = textures[2];
+
+	IColorMask *mask = IColorMask::Create();
+	mask->SetSubTexmap(0, mpmMix);
+	mask->SetDecomposeType(Decompose_Red);
+
+	material->SetSubTexmap(metallicMap, mask);
+
+	mask = IColorMask::Create();
+	mask->SetSubTexmap(0, mpmMix);
+	mask->SetDecomposeType(Decompose_Green);
+	material->SetSubTexmap(roughnesMap, mask);
+
+	material->SetSubTexmap(bumpMap, NormalBump(textures[1]));
+}
+
+ADFMATERIAL_WPROPS(CharacterConstants_HU)
+{
+	/*CharacterConstants_HU
+	0 diff
+	1 nrm
+	2 mpm
+	*/
+
+	CharacterSkinConstantsMaterialLoad(properties, material, textures);
+}
+
+ADFMATERIAL_WPROPS(GeneralR2Constants_HU)
+{
+	GeneralR2ConstantsMaterialLoad(properties, material, textures);
+}
+
+ADFMATERIAL_WPROPS(CharacterConstants_GZ)
+{
+	/*CharacterConstants_GZ
+	0 diff
+	1 nrm
+	2 mpm
+	3 dummy grey
+	4 dummy nrm
+	5 dummy
+	6 dummy
+	7 dummy black
+	8 detail spec?(eyewear)
+	*/
+	RBMCharacter6MaterialLoad(properties, material, textures);
+}
+
+ADFMATERIAL_WPROPS(CharacterSkinConstants_GZ)
+{
+	/*CharacterSkinConstants_GZ
+	0 diff
+	1 nrm
+	2 mpm
+	3 dummy
+	4 dummy nrm
+	5 dummy
+	6 dummy
+	7 dummy nrm
+	*/
+	RBMCharacter6MaterialLoad(properties, material, textures);
+}
+
+ADFMATERIAL_WPROPS(HairConstants_GZ)
+{
+	/*HairConstants_GZ
+	0 diff
+	1 nrm
+	2 mpm
+	3 color mask
+	*/
+
+	HairConstants_GZ *props = static_cast<HairConstants_GZ *>(properties->GetProperties());
+
+	int baseColorMap = ID_DI;
+	int opacityMap = ID_OP;
+	int bumpMap = ID_BU;
+	int roughnesMap = ID_SS;
+	int metallicMap = ID_SH;
+
+	if (material->ClassID() == PHYSIC_MAT_CLASSID)
+	{
+		baseColorMap = PhysicalMaterial::BaseColorMap;
+		opacityMap = PhysicalMaterial::CutoutMap;
+		bumpMap = PhysicalMaterial::BumpMap;
+		roughnesMap = PhysicalMaterial::RoughnessMap;
+		metallicMap = PhysicalMaterial::MetalnessMap;
+	}
+	else if (props->flags[HairConstantsFlags_GZ::doubleSided])
+		material->SetTwoSided(TRUE);
+
+	if (textures[0] && props->flags[HairConstantsFlags_GZ::alphaTest])
+	{
+		textures[0]->SetAlphaSource(ALPHA_FILE);
+		textures[0]->SetAlphaAsMono(TRUE);
+		material->SetSubTexmap(opacityMap, textures[0]);
+	}
+
+	Texmap *diff = textures[0];
+
+	if (props->flags[HairConstantsFlags_GZ::useColorMask])
+	{
+		IColorVar *var1 = IColorVar::Create();
+		var1->SetName(_T("Tint Color1"));
+
+		IColorVar *var2 = IColorVar::Create();
+		var2->SetName(_T("Tint Color2"));
+
+		IColorMask *mask = IColorMask::Create();
+		mask->SetSubTexmap(0, textures[3]);
+		mask->SetDecomposeType(Decompose_Red);
+
+		diff = Mix(var1, var2, mask);
+
+		var1 = IColorVar::Create();
+		var1->SetName(_T("Tint Color3"));
+
+		mask = IColorMask::Create();
+		mask->SetSubTexmap(0, textures[3]);
+		mask->SetDecomposeType(Decompose_Green);
+
+		diff = Mix(diff, var1, mask);
+
+		var1 = IColorVar::Create();
+		var1->SetName(_T("Tint Color4"));
+
+		mask = IColorMask::Create();
+		mask->SetSubTexmap(0, textures[3]);
+		mask->SetDecomposeType(Decompose_Blue);
+
+		diff = Mix(diff, var1, mask);
+		diff = RGBMultiply(textures[0], diff);
+	}
+
+	material->SetSubTexmap(baseColorMap, diff);
+
+	IColorMask *mask = IColorMask::Create();
+	mask->SetSubTexmap(0, textures[2]);
+	mask->SetDecomposeType(Decompose_Red);
+
+	material->SetSubTexmap(metallicMap, mask);
+
+	mask = IColorMask::Create();
+	mask->SetSubTexmap(0, textures[2]);
+	mask->SetDecomposeType(Decompose_Blue);
+	material->SetSubTexmap(roughnesMap, mask);
+
+	material->SetSubTexmap(bumpMap, NormalBump(textures[1]));
+}
+
+ADFMATERIAL_WPROPS(WindowConstants_GZ)
+{
+	/*WindowConstants_GZ
+	1 diff
+	2 nrm
+	3 mpm
+	4 bullet nrm
+	5 bullet mpm
+	6 crack nrm
+	7 crack mpm
+	*/
+
+	WindowConstants_GZ *props = static_cast<WindowConstants_GZ *>(properties->GetProperties());
+
+	int baseColorMap = ID_DI;
+	int bumpMap = ID_BU;
+	int roughnesMap = ID_SS;
+	int opacityMap = ID_OP;
+
+	if (material->ClassID() == PHYSIC_MAT_CLASSID)
+	{
+		baseColorMap = PhysicalMaterial::BaseColorMap;
+		bumpMap = PhysicalMaterial::BumpMap;
+		roughnesMap = PhysicalMaterial::RoughnessMap;
+		opacityMap = PhysicalMaterial::CutoutMap;
+	}
+	else
+		material->SetTwoSided(!props->flags[WindowConstantsFlags_GZ::oneSided]);
+
+	if (textures[0])
+	{
+		textures[0]->SetAlphaSource(ALPHA_FILE);
+		textures[0]->SetAlphaAsMono(TRUE);
+	}
+
+	material->SetSubTexmap(baseColorMap, RGBMultiply(textures[0], VertexColor()));
+	material->SetSubTexmap(opacityMap, textures[0]);
+	material->SetSubTexmap(bumpMap, NormalBump(textures[1]));
+	material->SetSubTexmap(roughnesMap, textures[2]);
+}
+
+
 #define ADDMATERIAL(classname) {classname::ADFHASH, classname##MaterialLoad},
 #define ADDMATERIALADF(classname) {classname::HASH, classname##MaterialLoad},
 
@@ -2126,7 +2645,20 @@ static const std::map<ApexHash, void(*)(AdfProperties *, StdMat2 *, TexmapMappin
 		CarPaintConstants,
 		CarLightConstants,
 		WindowConstants,
-		GeneralConstants
+		GeneralConstants,
+		GeneralR2Constants,
+		GeneralMkIIIConstants,
+		FoliageConstants_GZ,
+		BarkConstants_GZ,
+		CarLightConstants_GZ,
+		GeneralJC3Constants_HU,
+		CarPaintMMConstants_HU,
+		GeneralConstants_HU,
+		PropConstants_HU,
+		CharacterConstants_HU,
+		CharacterSkinConstants_GZ,
+		HairConstants_GZ,
+		WindowConstants_GZ
 	)
 };
 
@@ -2205,8 +2737,9 @@ Mtl *CreateMaterial(AmfMaterial *material)
 		if (t->hash)
 		{
 			ctex = NewDefaultBitmapTex();
-			ctex->SetMapName(static_cast<TSTRING>(esString(t->string)).c_str());
-			ctex->SetName(TFileInfo(ctex->GetMapName()).GetFileName().c_str());
+			TSTRING mapName = esString(t->string);
+			ctex->SetMapName(mapName.c_str());
+			ctex->SetName(TFileInfo(mapName).GetFileName().c_str());
 		}
 		
 		texmaps.push_back(ctex);

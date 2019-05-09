@@ -15,23 +15,27 @@
 	along with this program.If not, see <https://www.gnu.org/licenses/>.
 */
 
+#include <map>
+
+#include <triobj.h>
+#include <ilayermanager.h>
+#include <ilayer.h>
+#include <iskin.h>
+#include "../samples/modifiers/morpher/include/MorpherApi.h"
+#include "MeshNormalSpec.h"
+#include "IXTexmaps.h"
+
 #include "../ApexMax.h"
 #include "ApexImport.h"
 #include "AmfMesh.h"
 #include "AmfModel.h"
 #include "StuntAreas.h"
-#include <triobj.h>
-#include "MeshNormalSpec.h"
-#include <ilayermanager.h>
-#include <ilayer.h>
-#include <string>
+
 #include "datas/esstring.h"
-#include <iskin.h>
-#include "../samples/modifiers/morpher/include/MorpherApi.h"
-#include "IXTexmaps.h"
 #include "datas/masterprinter.hpp"
 #include "MAXex/NodeSuffix.h"
-#include <map>
+#include "datas/allocator_hybrid.hpp"
+
 
 #define ApexImp_CLASS_ID	Class_ID(0x85965629, 0x96893331)
 
@@ -901,11 +905,9 @@ int ApexImp::DoImport(const TCHAR* filename, ImpInterface* /*importerInt*/, Inte
 
 	iBoneScanner.RescanBones();
 
-#ifdef _UNICODE
+
 	IADF *adf = IADF::Create(filename);
-#else
-	IADF *adf = IADF::Create(static_cast<std::wstring>(esString(filename)).c_str());
-#endif
+
 	if (!adf)
 		return FALSE;
 
