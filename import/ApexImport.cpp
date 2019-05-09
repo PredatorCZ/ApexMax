@@ -22,7 +22,7 @@
 
 extern HINSTANCE hInstance;
 const TCHAR _name[] = _T("Apex Tool");
-const TCHAR _info[] = _T("\nCopyright (C) 2014-2019 Lukas Cone\nVersion 1");
+const TCHAR _info[] = _T("\nCopyright (C) 2014-2019 Lukas Cone\nVersion 1.4");
 const TCHAR _license[] = _T("Apex Tool uses ApexLib, Copyright(C) 2014-2019 Lukas Cone.");
 const TCHAR _homePage[] = _T("https://lukascone.wordpress.com/2019/02/22/apex-engine-plugin");
 
@@ -82,7 +82,7 @@ static INT_PTR CALLBACK DialogCallbacks(HWND hWnd, UINT message, WPARAM wParam, 
 		imp->hWnd = hWnd;
 		imp->LoadCFG();
 		SetupIntSpinner(hWnd, IDC_SPIN_SCALE, IDC_EDIT_SCALE, 0, 5000, imp->IDC_EDIT_SCALE_value);
-		SetWindowText(hWnd, _T("Apex Import v1"));
+		SetWindowText(hWnd, _T("Apex Import v1.4"));
 		return TRUE;
 
 	case WM_CLOSE:

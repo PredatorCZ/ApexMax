@@ -150,7 +150,7 @@ const TCHAR *ApexImp::OtherMessage2()
 
 unsigned int ApexImp::Version()
 {				
-	return 100;
+	return 140;
 }
 
 void ApexImp::ShowAbout(HWND hWnd)
