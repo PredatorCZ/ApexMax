@@ -15,25 +15,21 @@
 	along with this program.If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include "../ApexMax.h"
+
 #include <string>
-#include "datas/esstring.h"
-#include <stdmat.h>
-#include "AmfModel.h"
 #include <vector>
-#include "datas/masterprinter.hpp"
-#include "datas/fileinfo.hpp"
 #include <map>
+#include <stdmat.h>
+#include "ApexMax.h"
+#include "AmfProperties.h"
 #include "IXTexmaps.h"
 #include "MAXex/Maps.h"
+#include "datas/esstring.h"
+#include "datas/masterprinter.hpp"
+#include "datas/fileinfo.hpp"
 
-#include "RBMClassesJC2.h"
-#include "RBMClassesHU.h"
-#include "RBMClassesJC3.h"
-#include "RBNClasses.h"
-
-#define ADFMATERIAL(classname) void classname##MaterialLoad(AdfProperties*, StdMat2* material, TexmapMapping& textures)
-#define ADFMATERIAL_WPROPS(classname) void classname##MaterialLoad(AdfProperties* properties, StdMat2* material, TexmapMapping& textures)
+#define ADFMATERIAL(classname) void classname##MaterialLoad(void*, StdMat2* material, TexmapMapping& textures)
+#define ADFMATERIAL_WPROPS(classname) void classname##MaterialLoad(void* properties, StdMat2* material, TexmapMapping& textures)
 
 typedef std::vector<BitmapTex*> TexmapMapping;
 
@@ -619,7 +615,7 @@ ADFMATERIAL(RBMLandmark)
 
 ADFMATERIAL_WPROPS(RBMGeneralMK3)
 {
-	RBMGeneralMK3 *props = static_cast<RBMGeneralMK3*>(properties);
+	RBMGeneralMK3Constants *props = static_cast<RBMGeneralMK3Constants *>(properties);
 	bool usedecals = (props->flags & 0x200) != 0;
 
 	int baseColorMap = ID_DI;
@@ -1526,7 +1522,7 @@ ADFMATERIAL(LandmarkConstants)
 
 ADFMATERIAL_WPROPS(EmissiveUIConstants)
 {
-	EmissiveUIConstants *props = static_cast<EmissiveUIConstants*>(properties->GetProperties());
+	EmissiveUIConstants *props = static_cast<EmissiveUIConstants*>(properties);
 
 	if (material->ClassID() == PHYSIC_MAT_CLASSID)
 	{
@@ -1545,7 +1541,7 @@ ADFMATERIAL_WPROPS(EmissiveUIConstants)
 
 ADFMATERIAL_WPROPS(HologramConstants)
 {
-	HologramConstants *props = static_cast<HologramConstants*>(properties->GetProperties());
+	HologramConstants *props = static_cast<HologramConstants*>(properties);
 	int bumpMap = ID_BU;
 
 	if (material->ClassID() == PHYSIC_MAT_CLASSID)
@@ -1608,7 +1604,7 @@ ADFMATERIAL(FoliageConstants)
 
 ADFMATERIAL_WPROPS(BarkConstants)
 {
-	BarkConstants *props = static_cast<BarkConstants*>(properties->GetProperties());
+	BarkConstants *props = static_cast<BarkConstants*>(properties);
 
 	int baseColorMap = ID_DI;
 	int bumpMap = ID_BU;
@@ -1679,7 +1675,7 @@ ADFMATERIAL(EyeGlossConstants)
 
 ADFMATERIAL_WPROPS(HairConstants)
 {
-	HairConstants *props = static_cast<HairConstants*>(properties->GetProperties());
+	HairConstants *props = static_cast<HairConstants*>(properties);
 
 	int baseColorMap = ID_DI;
 	int opacityMap = ID_OP;
@@ -1723,7 +1719,7 @@ ADFMATERIAL_WPROPS(HairConstants)
 
 ADFMATERIAL_WPROPS(CharacterConstants)
 {
-	CharacterConstants *props = static_cast<CharacterConstants*>(properties->GetProperties());
+	CharacterConstants *props = static_cast<CharacterConstants*>(properties);
 
 	int baseColorMap = ID_DI;
 	int bumpMap = ID_BU;
@@ -1860,7 +1856,7 @@ ADFMATERIAL_WPROPS(CarPaintConstants)
 	// 10 decal mpm
 	// 11 average layer, uv3
 
-	CarPaintConstants *props = static_cast<CarPaintConstants*>(properties->GetProperties());
+	CarPaintConstants *props = static_cast<CarPaintConstants*>(properties);
 
 	int baseColorMap = ID_DI;
 	int bumpMap = ID_BU;
@@ -1961,7 +1957,7 @@ ADFMATERIAL_WPROPS(CarPaintConstants)
 
 ADFMATERIAL_WPROPS(WindowConstants)
 {
-	WindowConstants *props = static_cast<WindowConstants*>(properties->GetProperties());
+	WindowConstants *props = static_cast<WindowConstants*>(properties);
 
 	int baseColorMap = ID_DI;
 	int bumpMap = ID_BU;
@@ -1992,7 +1988,7 @@ ADFMATERIAL_WPROPS(WindowConstants)
 
 ADFMATERIAL_WPROPS(CarLightConstants)
 {
-	CarLightConstants *props = static_cast<CarLightConstants*>(properties->GetProperties());
+	CarLightConstants *props = static_cast<CarLightConstants*>(properties);
 
 	if (textures[3])
 	{
@@ -2011,7 +2007,7 @@ ADFMATERIAL_WPROPS(CarLightConstants)
 
 ADFMATERIAL_WPROPS(GeneralConstants)
 {
-	GeneralConstants *props = static_cast<GeneralConstants*>(properties->GetProperties());
+	GeneralConstants *props = static_cast<GeneralConstants*>(properties);
 
 	int baseColorMap = ID_DI;
 	int bumpMap = ID_BU;
@@ -2085,7 +2081,7 @@ ADFMATERIAL_WPROPS(GeneralR2Constants)
 	17 color var mask
 	*/
 
-	GeneralR2Constants *props = static_cast<GeneralR2Constants *>(properties->GetProperties());
+	GeneralR2Constants *props = static_cast<GeneralR2Constants *>(properties);
 
 	int baseColorMap = ID_DI;
 	int bumpMap = ID_BU;
@@ -2220,7 +2216,7 @@ ADFMATERIAL_WPROPS(GeneralR2Constants)
 
 ADFMATERIAL_WPROPS(GeneralMkIIIConstants) // only 1 model, Generation Zero
 {
-	GeneralMkIIIConstants *props = static_cast<GeneralMkIIIConstants *>(properties->GetProperties());
+	GeneralMkIIIConstants *props = static_cast<GeneralMkIIIConstants *>(properties);
 
 	int baseColorMap = ID_DI;
 	int bumpMap = ID_BU;
@@ -2461,7 +2457,7 @@ ADFMATERIAL_WPROPS(HairConstants_GZ)
 	3 color mask
 	*/
 
-	HairConstants_GZ *props = static_cast<HairConstants_GZ *>(properties->GetProperties());
+	HairConstants_GZ *props = static_cast<HairConstants_GZ *>(properties);
 
 	int baseColorMap = ID_DI;
 	int opacityMap = ID_OP;
@@ -2551,7 +2547,7 @@ ADFMATERIAL_WPROPS(WindowConstants_GZ)
 	7 crack mpm
 	*/
 
-	WindowConstants_GZ *props = static_cast<WindowConstants_GZ *>(properties->GetProperties());
+	WindowConstants_GZ *props = static_cast<WindowConstants_GZ *>(properties);
 
 	int baseColorMap = ID_DI;
 	int bumpMap = ID_BU;
@@ -2580,11 +2576,358 @@ ADFMATERIAL_WPROPS(WindowConstants_GZ)
 	material->SetSubTexmap(roughnesMap, textures[2]);
 }
 
+ADFMATERIAL_WPROPS(GeneralR2Constants_R2)
+{
+	/*GeneralR2Constants_R2
+	0 dif
+	1 nrm
+	2 mpm
+	3 color mask
+	4 emisive
+	5 detail dif
+	6 detail nrm
+	7 dif 2
+	8 nrm 2
+	9 msk 2
+	10 dif 3
+	11 nrm 3
+	12 mpm 3
+	13 tint
+	14 vertex anim pos
+	15 vertex anim nrm/rot
+	16 vertex anim dif
+	17 object normal
+	*/
 
-#define ADDMATERIAL(classname) {classname::ADFHASH, classname##MaterialLoad},
+	GeneralR2Constants_R2 *props = static_cast<GeneralR2Constants_R2 *>(properties);
+
+	int baseColorMap = ID_DI;
+	int bumpMap = ID_BU;
+	int roughnesMap = ID_SS;
+	int opacityMap = ID_OP;
+	int emissiveMap = ID_SI;
+	int dispMap = ID_DP;
+	int metallicMap = ID_SH;
+
+	if (material->ClassID() == PHYSIC_MAT_CLASSID)
+	{
+		baseColorMap = PhysicalMaterial::BaseColorMap;
+		bumpMap = PhysicalMaterial::BumpMap;
+		roughnesMap = PhysicalMaterial::RoughnessMap;
+		metallicMap = PhysicalMaterial::MetalnessMap;
+	}
+
+	Texmap *diff = RGBMultiply(textures[0], textures[5]);
+	Texmap *mpm = textures[2];
+	Texmap *bump = RGBMultiply(textures[1], textures[6]);
+
+	if (textures[9])
+		textures[9]->GetUVGen()->SetMapChannel(2);
+
+	if (textures[7])
+		textures[7]->GetUVGen()->SetMapChannel(2);
+
+	if (textures[8])
+		textures[8]->GetUVGen()->SetMapChannel(2);
+
+
+	if (textures[10])
+	{
+		textures[10]->GetUVGen()->SetMapChannel(2);
+		textures[10]->SetAlphaSource(ALPHA_FILE);
+		textures[10]->SetAlphaAsMono(TRUE);
+	}
+
+	if (textures[11])
+		textures[11]->GetUVGen()->SetMapChannel(2);
+
+	if (textures[12])
+		textures[12]->GetUVGen()->SetMapChannel(2);
+
+	if (textures[13])
+		textures[13]->GetUVGen()->SetMapChannel(2);
+
+	if (textures[3])
+	{
+		textures[3]->GetUVGen()->SetMapChannel(2);
+
+		IColorMask *mask = IColorMask::Create();
+		mask->SetSubTexmap(0, textures[3]);
+		mask->SetName(_T("Select Channel"));
+
+		diff = Mix(diff, textures[7], mask);
+		mpm = Mix(mpm, textures[8], mask);
+		bump = Mix(bump, textures[9], mask);
+	}
+
+	material->SetSubTexmap(baseColorMap, RGBMultiply(diff, VertexColor()));
+
+	if (props->flags0[GeneralR2Constants_R2_flags0::useEmissive])
+		material->SetSubTexmap(emissiveMap, textures[4]);
+
+	IColorMask *mask = IColorMask::Create();
+	mask->SetSubTexmap(0, mpm);
+	mask->SetDecomposeType(Decompose_Red);
+
+	material->SetSubTexmap(metallicMap, mask);
+
+	mask = IColorMask::Create();
+	mask->SetSubTexmap(0, mpm);
+	mask->SetDecomposeType(Decompose_Green);
+	material->SetSubTexmap(roughnesMap, mask);
+
+	material->SetSubTexmap(bumpMap, NormalBump(bump));
+}
+
+ADFMATERIAL_WPROPS(CharacterSkinConstants_R2)
+{
+	/*CharacterSkinConstants_R2
+	0 diff
+	1 nrm
+	2 mpm
+	3 dtm (color mask)
+	4 decal msk
+	5 decal dif
+	6 decal nrm
+	7 decal mpm
+	8 blood_dif (static)
+	9 blood mpm (static)
+	10 wrinkle map
+	11 detail dtl
+	12 detail dtl
+	13 detail dtl
+	14 detail dtl
+	15 fur
+	*/
+
+	CharacterSkinConstants_R2 *props = static_cast<CharacterSkinConstants_R2 *>(properties);
+
+	int baseColorMap = ID_DI;
+	int bumpMap = ID_BU;
+	int roughnesMap = ID_SS;
+	int metallicMap = ID_SH;
+
+	if (textures[4])
+		textures[4]->GetUVGen()->SetMapChannel(2);
+
+	if (textures[5])
+		textures[5]->GetUVGen()->SetMapChannel(2);
+
+	if (textures[6])
+		textures[6]->GetUVGen()->SetMapChannel(2);
+
+	if (textures[7])
+		textures[7]->GetUVGen()->SetMapChannel(2);
+
+	if (material->ClassID() == PHYSIC_MAT_CLASSID)
+	{
+		baseColorMap = PhysicalMaterial::BaseColorMap;
+		bumpMap = PhysicalMaterial::BumpMap;
+		roughnesMap = PhysicalMaterial::RoughnessMap;
+		metallicMap = PhysicalMaterial::MetalnessMap;
+	}
+
+	Texmap *hmap = textures[4];
+
+	material->SetSubTexmap(baseColorMap, Mix(textures[0], textures[5], hmap));
+
+	Texmap *mpmMix = Mix(textures[2], textures[7], hmap);
+
+	IColorMask *mask = IColorMask::Create();
+	mask->SetSubTexmap(0, mpmMix);
+	mask->SetDecomposeType(Decompose_Red);
+
+	material->SetSubTexmap(metallicMap, mask);
+
+	mask = IColorMask::Create();
+	mask->SetSubTexmap(0, mpmMix);
+	mask->SetDecomposeType(Decompose_Green);
+	material->SetSubTexmap(roughnesMap, mask);
+
+	material->SetSubTexmap(bumpMap, NormalBump(Mix(textures[1], textures[6], hmap)));
+}
+
+ADFMATERIAL_WPROPS(WindowConstants_R2)
+{
+	/* WindowConstants_R2
+	0 detail
+	1 mask
+	2 detail
+	3 bullet mask
+	4 nrm
+	*/
+
+	WindowConstants_R2 *props = static_cast<WindowConstants_R2 *>(properties);
+
+	int baseColorMap = ID_DI;
+	int bumpMap = ID_BU;
+	int roughnesMap = ID_SS;
+	int opacityMap = ID_OP;
+
+	if (material->ClassID() == PHYSIC_MAT_CLASSID)
+	{
+		baseColorMap = PhysicalMaterial::BaseColorMap;
+		bumpMap = PhysicalMaterial::BumpMap;
+		roughnesMap = PhysicalMaterial::RoughnessMap;
+		opacityMap = PhysicalMaterial::CutoutMap;
+	}
+	else
+		material->SetTwoSided(!props->flags[WindowConstantsFlags_R2::oneSided]);
+
+	if (textures[0])
+	{
+		textures[0]->SetAlphaSource(ALPHA_FILE);
+		textures[0]->SetAlphaAsMono(TRUE);
+	}
+
+	material->SetSubTexmap(baseColorMap, RGBMultiply(textures[0], VertexColor()));
+	material->SetSubTexmap(opacityMap, textures[1]);
+	material->SetSubTexmap(bumpMap, NormalBump(textures[4]));
+	material->SetSubTexmap(roughnesMap, textures[2]);
+}
+
+ADFMATERIAL_WPROPS(BarkConstants_R2)
+{
+	/* BarkConstants_R2
+	0 dif
+	1 nrm
+	2 mpm
+	3 mask
+	4 dif 2
+	5 nrm 2
+	6 mpm 2
+	7 nrm 3
+	*/
+
+	BarkConstants_R2 *props = static_cast<BarkConstants_R2 *>(properties);
+
+	int baseColorMap = ID_DI;
+	int bumpMap = ID_BU;
+	int roughnesMap = ID_SS;
+	int metallicMap = ID_SH;
+
+	if (textures[4])
+		textures[4]->GetUVGen()->SetMapChannel(2);
+
+	if (textures[5])
+		textures[5]->GetUVGen()->SetMapChannel(2);
+
+	if (textures[6])
+		textures[6]->GetUVGen()->SetMapChannel(2);
+
+	if (textures[0])
+	{
+		textures[0]->SetAlphaSource(ALPHA_FILE);
+		textures[0]->SetAlphaAsMono(TRUE);
+	}
+
+	if (material->ClassID() == PHYSIC_MAT_CLASSID)
+	{
+		baseColorMap = PhysicalMaterial::BaseColorMap;
+		bumpMap = PhysicalMaterial::BumpMap;
+		roughnesMap = PhysicalMaterial::RoughnessMap;
+		metallicMap = PhysicalMaterial::MetalnessMap;
+	}
+
+	Texmap *hmap = textures[3];
+
+	material->SetSubTexmap(baseColorMap, Mix(textures[0], textures[4], hmap));
+
+	Texmap *mpmMix = Mix(textures[2], textures[6], hmap);
+
+	IColorMask *mask = IColorMask::Create();
+	mask->SetSubTexmap(0, mpmMix);
+	mask->SetDecomposeType(Decompose_Red);
+
+	material->SetSubTexmap(metallicMap, mask);
+
+	mask = IColorMask::Create();
+	mask->SetSubTexmap(0, mpmMix);
+	mask->SetDecomposeType(Decompose_Green);
+	material->SetSubTexmap(roughnesMap, mask);
+
+	material->SetSubTexmap(bumpMap, NormalBump(Mix(textures[1], textures[5], hmap)));
+}
+
+ADFMATERIAL_WPROPS(HologramConstants_R2)
+{
+	/* HologramConstants_R2
+	0 distort msk
+	1 null
+	2 null
+	3 null
+	4 mask
+	*/
+
+	HologramConstants_R2 *props = static_cast<HologramConstants_R2 *>(properties);
+	int diffMap = ID_DI;
+	int opacMap = ID_OP;
+
+	if (material->ClassID() == PHYSIC_MAT_CLASSID)
+	{
+		PhysicalMaterial mat(material);
+		mat.Emission(1.0f);
+		mat.BaseColor(mat.EmissionColor());
+		mat.EmissionLuminance(100.0f);
+		diffMap = PhysicalMaterial::BaseColorMap;
+		opacMap = PhysicalMaterial::CutoutMap;
+	}
+	else
+	{
+		material->SetSelfIllum(1.f, 0);
+		material->SetTwoSided(TRUE);
+	}
+
+	IColorMask *mask = IColorMask::Create();
+	mask->SetSubTexmap(0, textures[4]);
+	mask->SetDecomposeType(Decompose_Red);
+	material->SetSubTexmap(opacMap, mask);
+
+	mask = IColorMask::Create();
+	mask->SetSubTexmap(0, textures[4]);
+	mask->SetDecomposeType(Decompose_Green);
+
+	CompositeTex diff;
+	CompositeTex::Layer layer1 = diff.GetLayer(0);
+
+	Mix bMix;
+	bMix.Color1(reinterpret_cast<Point3 &>(props->primaryColor));
+	bMix.Color2(reinterpret_cast<Point3 &>(props->secondaryColor));
+	bMix.Mask(mask);
+
+	layer1.Map(bMix);
+
+	IColorVar *cVar = IColorVar::Create();
+	cVar->SetName(_T("Base Color"));
+	cVar->SetColor(reinterpret_cast<Point3 &>(props->baseColor), 0);
+	layer1 = diff.AddLayer();
+	layer1.Map(cVar);
+	layer1.BlendMode(CompositeTex::Add);
+
+	mask = IColorMask::Create();
+	mask->SetSubTexmap(0, textures[4]);
+	mask->SetDecomposeType(Decompose_Blue);
+	layer1.Mask(mask);
+
+	material->SetSubTexmap(diffMap, diff);
+}
+
+ADFMATERIAL_WPROPS(FoliageConstants_R2)
+{
+	/*FoliageConstants_R2
+	0 diff
+	1 nrm
+	2 ao
+	3 mpm
+	*/
+	RBMVegetationFoliage3MaterialLoad(properties, material, textures);
+}
+
+
+#define ADDMATERIAL(classname) {classname##Constants::HASH, classname##MaterialLoad},
 #define ADDMATERIALADF(classname) {classname::HASH, classname##MaterialLoad},
 
-static const std::map<ApexHash, void(*)(AdfProperties *, StdMat2 *, TexmapMapping &)> materialStorage =
+static const std::map<ApexHash, void(*)(void *, StdMat2 *, TexmapMapping &)> materialStorage =
 {
 	StaticFor(ADDMATERIAL,
 		RBMCarPaintSimple,
@@ -2658,7 +3001,13 @@ static const std::map<ApexHash, void(*)(AdfProperties *, StdMat2 *, TexmapMappin
 		CharacterConstants_HU,
 		CharacterSkinConstants_GZ,
 		HairConstants_GZ,
-		WindowConstants_GZ
+		WindowConstants_GZ,
+		FoliageConstants_R2,
+		HologramConstants_R2,
+		BarkConstants_R2,
+		WindowConstants_R2,
+		CharacterSkinConstants_R2,
+		GeneralR2Constants_R2
 	)
 };
 
@@ -2707,37 +3056,39 @@ Mtl *CreateMaterial(AmfMaterial *material)
 {
 	StdMat2 *mat = nullptr;
 
-	if (material->materialType == AmfMaterial::MaterialType_PBR)
+	if (material->GetMaterialType() == MaterialType_PBR)
 		mat = PhysicalMaterial();
 
 	if (!mat)
 		mat = NewDefaultStdMat();
 
-	mat->SetName(static_cast<TSTRING>(esString(material->name->string)).c_str());
+	mat->SetName(static_cast<TSTRING>(esString(material->GetName())).c_str());
 
-	if (!material->attributes)
+	if (!material->GetRawAttributes())
 	{
 		printerror("Could not find attributes for: ", << mat->GetName());
 		return mat;
 	}
 
-	if (!materialStorage.count(material->attributes->typeHash))
+	if (!materialStorage.count(material->GetAttributesHash()))
 	{
 		printerror("Could not find material function for: ", << mat->GetName());
 		return mat;
 	}
 
+	const int numTextures = material->GetNumTextures();
 	TexmapMapping texmaps;
-	texmaps.reserve(material->textures.size());
+	texmaps.reserve(numTextures);
 
-	for (auto &t : material->textures)
+	for (int t = 0; t < numTextures; t++)
 	{
+		const char *texName = material->GetTexture(t);
 		BitmapTex *ctex = nullptr;
 
-		if (t->hash)
+		if (strlen(texName))
 		{
 			ctex = NewDefaultBitmapTex();
-			TSTRING mapName = esString(t->string);
+			TSTRING mapName = esString(texName);
 			ctex->SetMapName(mapName.c_str());
 			ctex->SetName(TFileInfo(mapName).GetFileName().c_str());
 		}
@@ -2745,7 +3096,7 @@ Mtl *CreateMaterial(AmfMaterial *material)
 		texmaps.push_back(ctex);
 	}
 
-	materialStorage.at(material->attributes->typeHash)(material->attributes, mat, texmaps);
+	materialStorage.at(material->GetAttributesHash())(material->GetRawAttributes(), mat, texmaps);
 
 	int texID = 0;
 

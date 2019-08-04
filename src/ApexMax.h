@@ -22,15 +22,60 @@
 #include <iparamm2.h>
 #include <maxtypes.h>
 #include <maxscript/maxscript.h>
-//SIMPLE TYPE
-
+#include "MAXex/win/CFGMacros.h"
 
 #include <impexp.h>
 #include <direct.h>
 #include <commdlg.h>
 
+#include "resource.h"
+#include <tchar.h>
+#include <string>
+#include <windows.h>
+#include <matrix3.h>
+
 #include "ApexApi.h"
 
-extern TCHAR *GetString(int id);
+#define APEXMAX_VERSION_MAJOR 1
+#define APEXMAX_VERSION_MINOR 6
+
+#define APEXMAX_VERSION APEXMAX_VERSION_MAJOR##.##APEXMAX_VERSION_MINOR
+static constexpr int APEXMAX_VERSIONINT = APEXMAX_VERSION_MAJOR * 100 + APEXMAX_VERSION_MINOR;
 
 extern HINSTANCE hInstance;
+
+class ApexImport
+{
+public:
+	TSTRING cfgpath;
+	const TCHAR *CFGFile;
+	HWND hWnd;
+
+	enum ConfigBoolean
+	{
+		IDConfigBool(IDC_CH_DEBUGNAME),
+		IDConfigBool(IDC_CH_DUMPMATINFO),
+		IDConfigBool(IDC_CH_CLEARLISTENER),
+		IDConfigBool(IDC_CH_FORCESTDMAT),
+		IDConfigBool(IDC_CH_ENABLEVIEWMAT),
+	};
+
+	NewIDConfigValue(IDC_EDIT_SCALE);
+
+	EnumFlags<uchar, ConfigBoolean> flags;
+
+	ApexImport();
+	~ApexImport() {}
+	int LoadModel();
+
+	void BuildCFG();
+	void LoadCFG();
+	void SaveCFG();
+
+	int SpawnDialog();
+
+};
+
+void ShowAboutDLG(HWND hWnd);
+
+extern const Matrix3 corMat;

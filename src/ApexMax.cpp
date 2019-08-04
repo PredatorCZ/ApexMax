@@ -15,22 +15,32 @@
 	along with this program.If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include "ApexImport.h"
+#include "ApexMax.h"
 #include <IPathConfigMgr.h>
 #include <3dsmaxport.h>
 #include <iparamm2.h>
 
-extern HINSTANCE hInstance;
+const Matrix3 corMat = 
+{
+	Point3{ -1.f,0.f,0.f },
+	Point3{ 0.f,0.f,1.f },
+	Point3{ 0.f,1.f, 0.f },
+	Point3{ 0.f, 0.f, 0.f } 
+};
+
+#define QUOTE(x) #x
+#define CATTEDTEXT(x) QUOTE(x)
+#define APEXMAX_VERSION_S CATTEDTEXT(APEXMAX_VERSION)
+
 const TCHAR _name[] = _T("Apex Tool");
-const TCHAR _info[] = _T("\nCopyright (C) 2014-2019 Lukas Cone\nVersion 1.4");
+const TCHAR _info[] = _T("\nCopyright (C) 2014-2019 Lukas Cone\nVersion ") APEXMAX_VERSION_S;
 const TCHAR _license[] = _T("Apex Tool uses ApexLib, Copyright(C) 2014-2019 Lukas Cone.");
 const TCHAR _homePage[] = _T("https://lukascone.wordpress.com/2019/02/22/apex-engine-plugin");
 
 #include "MAXex/win/AboutDlg.h"
 
 ApexImport::ApexImport(): CFGFile(nullptr), hWnd(nullptr),
-flags(StaticFor(IDDistributeBooleans, IDC_CH_DEBUGNAME_checked, IDC_CH_DUMPMATINFO_checked) 0),
-IDConfigValue(IDC_EDIT_SCALE)(145.f) {}
+flags(IDC_CH_DEBUGNAME_checked, IDC_CH_DUMPMATINFO_checked), IDConfigValue(IDC_EDIT_SCALE)(145.f) {}
 
 void ApexImport::BuildCFG()
 {
@@ -82,7 +92,7 @@ static INT_PTR CALLBACK DialogCallbacks(HWND hWnd, UINT message, WPARAM wParam, 
 		imp->hWnd = hWnd;
 		imp->LoadCFG();
 		SetupIntSpinner(hWnd, IDC_SPIN_SCALE, IDC_EDIT_SCALE, 0, 5000, imp->IDC_EDIT_SCALE_value);
-		SetWindowText(hWnd, _T("Apex Import v1.4"));
+		SetWindowText(hWnd, _T("Apex Import v") APEXMAX_VERSION_S);
 		return TRUE;
 
 	case WM_CLOSE:

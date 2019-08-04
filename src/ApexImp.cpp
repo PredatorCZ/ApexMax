@@ -24,21 +24,18 @@
 #include "../samples/modifiers/morpher/include/MorpherApi.h"
 #include "MeshNormalSpec.h"
 #include "IXTexmaps.h"
+#include "ApexMax.h"
 
-#include "../ApexMax.h"
-#include "ApexImport.h"
-#include "AmfMesh.h"
-#include "AmfModel.h"
 #include "StuntAreas.h"
 
 #include "datas/esstring.h"
 #include "datas/masterprinter.hpp"
 #include "MAXex/NodeSuffix.h"
-#include "datas/allocator_hybrid.hpp"
+#include "datas/vectors.hpp"
 
 
 #define ApexImp_CLASS_ID	Class_ID(0x85965629, 0x96893331)
-
+static const TCHAR _className[] = _T("ApexImp");
 
 class ApexImp : public SceneImport, ApexImport
 {
@@ -74,11 +71,11 @@ static class : public ClassDesc2
 public:
 	virtual int				IsPublic() 							{ return TRUE; }
 	virtual void*			Create(BOOL /*loading = FALSE*/) 	{ return new ApexImp(); }
-	virtual const TCHAR *	ClassName() 						{ return GetString(IDS_CLASS_NAME); }
+	virtual const TCHAR *	ClassName() 						{ return _className; }
 	virtual SClass_ID		SuperClassID() 						{ return SCENE_IMPORT_CLASS_ID; }
 	virtual Class_ID		ClassID() 							{ return ApexImp_CLASS_ID; }
-	virtual const TCHAR*	Category() 							{ return GetString(IDS_CATEGORY); }
-	virtual const TCHAR*	InternalName() 						{ return _T("ApexImp"); }				// returns fixed parsable name (scripter-visible name)
+	virtual const TCHAR*	Category() 							{ return NULL; }
+	virtual const TCHAR*	InternalName() 						{ return _className; }				// returns fixed parsable name (scripter-visible name)
 	virtual HINSTANCE		HInstance() 						{ return hInstance; }					// returns owning module handle
 }apexImpDesc;
 
@@ -150,7 +147,7 @@ const TCHAR *ApexImp::OtherMessage2()
 
 unsigned int ApexImp::Version()
 {				
-	return 140;
+	return APEXMAX_VERSIONINT;
 }
 
 void ApexImp::ShowAbout(HWND hWnd)
@@ -246,28 +243,30 @@ INodeSuffixer ApexImp::LoadMesh(AmfMesh *imsh)
 {
 	INodeSuffixer nde;
 
-	if (!imsh->properlyLinked)
+	if (!imsh->IsValid())
 		return nde;
 
 	TriObject *obj = CreateNewTriObject();
 	Mesh *msh = &obj->GetMesh();
 
-	msh->setNumVerts(imsh->Header.vertexCount);
-	msh->setNumFaces(imsh->Header.indexCount / 3);
+	msh->setNumVerts(imsh->GetNumVertices());
+	msh->setNumFaces(imsh->GetNumIndices() / 3);
 
 	const int numVerts = msh->numVerts;
 	const int numFaces = msh->numFaces;
+	const int numSubMeshes = imsh->GetNumSubMeshes();
 	int currentMap = 1;	
 	int matid = 0;
+	AmfMesh::DescriptorCollection decs = imsh->GetDescriptors();
 
-	for (auto &d : imsh->streamAttributes)
+	for (auto &d : decs)
 	{
-		switch (d.Header.usage)
+		switch (d->usage)
 		{
 		case AmfUsage_Position:
 		{
 			Matrix3 localCorMat = corMat;
-			float *packer = reinterpret_cast<float*>(d.Header.packingData);
+			float *packer = reinterpret_cast<float*>(d->packingData);
 
 			if (*packer > FLT_EPSILON)
 				localCorMat.Scale({ *packer,*packer,*packer });
@@ -277,7 +276,7 @@ INodeSuffixer ApexImp::LoadMesh(AmfMesh *imsh)
 			for (int v = 0; v < numVerts; v++)
 			{
 				Point3 tmp;
-				d.Evaluate(&d, v, &tmp); 
+				d->Evaluate(v, &tmp); 
 				msh->setVert(v, localCorMat.VectorTransform(tmp));
 			}
 			break;
@@ -295,22 +294,22 @@ INodeSuffixer ApexImp::LoadMesh(AmfMesh *imsh)
 			for (int v = 0; v < numVerts; v++)
 			{
 				Point3 temp;
-				d.Evaluate(&d, v, &temp);
+				d->Evaluate(v, &temp);
 				normalSpec->Normal(v) = corMat.VectorTransform(temp);
 				normalSpec->SetNormalExplicit(v, true);
 			}
 
-			for (auto &s : imsh->subMeshes)
+			for (int s = 0; s < numSubMeshes; s++)
 			{
-				for (int f = 0; f < numFaces; f++)
+				USVector *ibuff = reinterpret_cast<USVector *>(imsh->GetIndicesBuffer(s));
+
+				for (int f = 0; f < numFaces; f++, ibuff++)
 				{
 					MeshNormalFace &normalFace = normalSpec->Face(f);
-					USVector tmp;
-					s.GetFace(f, tmp);
 					normalFace.SpecifyAll();
-					normalFace.SetNormalID(0, tmp.X);
-					normalFace.SetNormalID(1, tmp.Y);
-					normalFace.SetNormalID(2, tmp.Z);
+					normalFace.SetNormalID(0, ibuff->X);
+					normalFace.SetNormalID(1, ibuff->Y);
+					normalFace.SetNormalID(2, ibuff->Z);
 				}
 			}
 			break;
@@ -321,7 +320,7 @@ INodeSuffixer ApexImp::LoadMesh(AmfMesh *imsh)
 			msh->setNumMapVerts(currentMap, numVerts);
 			msh->setNumMapFaces(currentMap, numFaces);
 			nde.AddChannel(currentMap);
-			Vector2 packer = *reinterpret_cast<Vector2*>(d.Header.packingData);
+			Vector2 packer = *reinterpret_cast<Vector2*>(d->packingData);
 
 			if (!packer.Length())
 				packer = Vector2(1.0f, 1.0f);
@@ -335,7 +334,7 @@ INodeSuffixer ApexImp::LoadMesh(AmfMesh *imsh)
 			for (int v = 0; v < numVerts; v++)
 			{
 				Vector2 temp;
-				d.Evaluate(&d, v, &temp);			
+				d->Evaluate(v, &temp);
 				msh->Map(currentMap).tv[v] = uvscale.PointTransform({ temp.X, temp.Y, 0.f });
 			}
 
@@ -344,7 +343,7 @@ INodeSuffixer ApexImp::LoadMesh(AmfMesh *imsh)
 		}
 		case AmfUsage_Color:
 		{	
-			const bool colorOnly = d.Header.format == AmfFormat_R32_UNIT_UNSIGNED_VEC_AS_FLOAT_c;
+			const bool colorOnly = d->format == AmfFormat_R32_UNIT_UNSIGNED_VEC_AS_FLOAT_c;
 
 			if (colorOnly)
 			{
@@ -355,7 +354,7 @@ INodeSuffixer ApexImp::LoadMesh(AmfMesh *imsh)
 				for (int v = 0; v < numVerts; v++)
 				{
 					Point3 temp;
-					d.Evaluate(&d, v, &temp);
+					d->Evaluate(v, &temp);
 					msh->Map(0).tv[v] = temp;
 				}
 			}
@@ -370,7 +369,7 @@ INodeSuffixer ApexImp::LoadMesh(AmfMesh *imsh)
 				for (int v = 0; v < numVerts; v++)
 				{
 					Vector4 temp;
-					d.Evaluate(&d, v, &temp);
+					d->Evaluate(v, &temp);
 					msh->Map(0).tv[v] = reinterpret_cast<Point3&>(temp);
 					msh->Map(-2).tv[v] = { temp.W, temp.W, temp.W };
 				}
@@ -385,23 +384,22 @@ INodeSuffixer ApexImp::LoadMesh(AmfMesh *imsh)
 
 	int currentFaceOffset = 0;
 
-	for (auto &s : imsh->subMeshes)
+	for (int s = 0; s < numSubMeshes; s++)
 	{
-		const int curNumFaces = s.Header.indexCount / 3;
+		USVector *ibuff = reinterpret_cast<USVector *>(imsh->GetIndicesBuffer(s));
+		const int curNumFaces = imsh->GetNumIndices(s)/ 3;
 
-		for (int f = 0; f < curNumFaces; f++)
+		for (int f = 0; f < curNumFaces; f++, ibuff++)
 		{
 			Face &face = msh->faces[currentFaceOffset + f];
 			face.setEdgeVisFlags(1, 1, 1);
-			USVector tmp;
-			s.GetFace(f, tmp);
-			face.v[0] = tmp.X;
-			face.v[1] = tmp.Y;
-			face.v[2] = tmp.Z;
+			face.v[0] = ibuff->X;
+			face.v[1] = ibuff->Y;
+			face.v[2] = ibuff->Z;
 			face.setMatID(matid);
 
 			for (int &i : nde)
-				msh->Map(i).tf[currentFaceOffset + f].setTVerts(tmp.X, tmp.Y, tmp.Z);
+				msh->Map(i).tf[currentFaceOffset + f].setTVerts(ibuff->X, ibuff->Y, ibuff->Z);
 		}
 
 		currentFaceOffset += curNumFaces;
@@ -416,7 +414,7 @@ INodeSuffixer ApexImp::LoadMesh(AmfMesh *imsh)
 
 void ApexImp::LoadSpriteData(AmfMesh *mesh, INode *nde)
 {
-	const int numNodes = static_cast<int>(mesh->spritePositions.size());
+	const int numNodes = mesh->GetNumRemaps();
 	ISkinImportData *cskin = nullptr;
 
 	if (numNodes > 1)
@@ -429,16 +427,16 @@ void ApexImp::LoadSpriteData(AmfMesh *mesh, INode *nde)
 	INodeTab nodes;
 	nodes.Resize(numNodes);
 
-	int curBone = 0;
+	const Vector *rMaps = static_cast<const Vector *>(mesh->GetRemaps());
 
-	for (auto &b : mesh->spritePositions)
+	for (int curBone = 0; curBone < numNodes; curBone++)
 	{
 		Object *obj = static_cast<Object*>(CreateInstance(HELPER_CLASS_ID, Class_ID(DUMMY_CLASS_ID, 0)));
 		INode *node = GetCOREInterface()->CreateObjectNode(obj);
 		node->ShowBone(2);
 		Matrix3 localCorMat = corMat;
 		localCorMat.Scale({ IDC_EDIT_SCALE_value,IDC_EDIT_SCALE_value,IDC_EDIT_SCALE_value });
-		localCorMat.SetTrans(localCorMat.PointTransform(reinterpret_cast<Point3&>(b)));
+		localCorMat.SetTrans(localCorMat.PointTransform(reinterpret_cast<const Point3&>(rMaps[curBone])));
 		node->SetNodeTM(0, localCorMat);
 		node->SetWireColor(0x80ff);
 		node->SetName(ToBoneName((TSTRING(_T("SpriteBone")) + ToTSTRING(curBone))));
@@ -453,23 +451,23 @@ void ApexImp::LoadSpriteData(AmfMesh *mesh, INode *nde)
 			node->AttachChild(nde);
 			return;
 		}
-
-		curBone++;
 	}
 
-	const int numVerts = mesh->Header.vertexCount;
+	const int numVerts = mesh->GetNumVertices();
 	nde->EvalWorldState(0);
+	
+	AmfMesh::DescriptorCollection decs = mesh->GetDescriptors();
 
-	for (auto &d : mesh->streamAttributes)
+	for (auto &d : decs)
 	{
-		switch (d.Header.usage)
+		switch (d->usage)
 		{
 		case AmfUsage_BoneIndex:
 		{
 			for (int v = 0; v < numVerts; v++)
 			{
 				int temp;
-				d.Evaluate(&d, v, &temp);
+				d->Evaluate(v, &temp);
 
 				Tab<INode*> cbn;
 				Tab<float> cwt;
@@ -489,18 +487,20 @@ void ApexImp::LoadSpriteData(AmfMesh *mesh, INode *nde)
 
 void LoadDeform(AmfMesh *mesh, INode *nde)
 {
-	AmfStreamAttribute *deform = nullptr,
+	AmfVertexDescriptor *deform = nullptr,
 		*points = nullptr;
 
-	for (auto &d : mesh->streamAttributes)
+	AmfMesh::DescriptorCollection decs = mesh->GetDescriptors();
+
+	for (auto &d : decs)
 	{
-		switch (d.Header.usage)
+		switch (d->usage)
 		{
 		case AmfUsage_DeformNormal_c:
-			deform = &d;
+			deform = d.get();
 			break;
 		case AmfUsage_DeformPoints_c:
-			points = &d;
+			points = d.get();
 			break;
 		}
 	}
@@ -511,7 +511,7 @@ void LoadDeform(AmfMesh *mesh, INode *nde)
 	MaxMorphModifier morpher = {};
 	morpher.Init(cmod);
 	
-	const int numVerts = mesh->Header.vertexCount;
+	const int numVerts = mesh->GetNumVertices();
 
 	{
 		MaxMorphChannel chan = morpher.GetMorphChannel(0);
@@ -521,7 +521,7 @@ void LoadDeform(AmfMesh *mesh, INode *nde)
 		for (int v = 0; v < numVerts; v++)
 		{
 			Point3 temp;
-			deform->Evaluate(deform, v, &temp);
+			deform->Evaluate(v, &temp);
 
 			chan.SetMorphPointDelta(v, corMat.VectorTransform(temp) * 2.0f);
 		}
@@ -529,23 +529,27 @@ void LoadDeform(AmfMesh *mesh, INode *nde)
 
 	if (points)
 	{
-		int curChan = 1;
+		const int numChannels = mesh->GetNumRemaps();
 
-		for (auto &r : mesh->boneIndexLookup)
-			if (r > 0)
+		for (int c = 0; c < numChannels; c++)
+		{
+			const int rmap = mesh->GetRemap(c);
+
+			if (rmap > 0)
 			{
-				MaxMorphChannel chan = morpher.GetMorphChannel(curChan++);
+				MaxMorphChannel chan = morpher.GetMorphChannel(c + 1);
 				chan.Reset(true, true, numVerts);
-				chan.SetName((TSTRING(_T("cp")) + ToTSTRING(r)).c_str());
+				chan.SetName((TSTRING(_T("cp")) + ToTSTRING(rmap)).c_str());
 			}
+		}
 
 		for (int v = 0; v < numVerts; v++)
 		{
 			Point3 temp;
-			deform->Evaluate(deform, v, &temp);
+			deform->Evaluate(v, &temp);
 
 			Vector4 cpoints;
-			points->Evaluate(points, v, &cpoints);
+			points->Evaluate(v, &cpoints);
 
 			Vector4 indicies = cpoints.Convert<float>() * 127.996f;
 			Vector4 indiciesFloored(floorf(indicies.X), floorf(indicies.Y), floorf(indicies.Z), floorf(indicies.W));
@@ -565,19 +569,20 @@ void LoadDeform(AmfMesh *mesh, INode *nde)
 void LoadSkin(AmfMesh *mesh, INode *nde)
 {
 	INodeTab bones;
-	const int numVerts = mesh->Header.vertexCount;
-	std::vector<AmfStreamAttribute*> weights;
-	std::vector<AmfStreamAttribute*> bonesids;
+	const int numVerts = mesh->GetNumVertices();
+	AmfMesh::DescriptorCollection decs = mesh->GetDescriptors();
+	std::vector<AmfVertexDescriptor *> weights;
+	std::vector<AmfVertexDescriptor *> bonesids;
 
-	for (auto &d : mesh->streamAttributes)
+	for (auto &d : decs)
 	{
-		switch (d.Header.usage)
+		switch (d->usage)
 		{
 		case AmfUsage_BoneIndex:
-			bonesids.push_back(&d);
+			bonesids.push_back(d.get());
 			break;
 		case AmfUsage_BoneWeight:
-			weights.push_back(&d);
+			weights.push_back(d.get());
 			break;
 		}
 	}
@@ -589,9 +594,11 @@ void LoadSkin(AmfMesh *mesh, INode *nde)
 	GetCOREInterface7()->AddModifier(*nde, *cmod);
 	ISkinImportData *cskin = static_cast<ISkinImportData*>(cmod->GetInterface(I_SKINIMPORTDATA));
 
-	for (auto &b : mesh->boneIndexLookup)
+	const int numRemaps = mesh->GetNumRemaps();
+
+	for (int c = 0; c < numRemaps; c++)
 	{
-		INode *cnde = iBoneScanner.LookupNode(b);
+		INode *cnde = iBoneScanner.LookupNode(mesh->GetRemap(c));
 		bones.AppendNode(cnde);
 		cskin->AddBoneEx(cnde, 0);
 	}
@@ -600,12 +607,12 @@ void LoadSkin(AmfMesh *mesh, INode *nde)
 
 	if (!weights.size())
 	{
-		AmfStreamAttribute &cbns = *bonesids[0];
+		AmfVertexDescriptor &cbns = *bonesids[0];
 
 		for (int v = 0; v < numVerts; v++)
 		{
 			uchar temp;
-			cbns.Evaluate(&cbns, v, &temp);
+			cbns.Evaluate(v, &temp);
 
 			Tab<INode*> cbn;
 			Tab<float> cwt;
@@ -619,16 +626,16 @@ void LoadSkin(AmfMesh *mesh, INode *nde)
 	}
 	else if (weights.size() == 1)
 	{
-		AmfStreamAttribute &cbns = *bonesids[0];
-		AmfStreamAttribute &cwts = *weights[0];
+		AmfVertexDescriptor &cbns = *bonesids[0];
+		AmfVertexDescriptor &cwts = *weights[0];
 
 		for (int v = 0; v < numVerts; v++)
 		{
 			UCVector4 bns;
-			cbns.Evaluate(&cbns, v, &bns);
+			cbns.Evaluate(v, &bns);
 
 			Vector4 wts;
-			cwts.Evaluate(&cwts, v, &wts);
+			cwts.Evaluate(v, &wts);
 
 			Tab<INode*> cbn;
 			Tab<float> cwt;
@@ -659,10 +666,10 @@ void LoadSkin(AmfMesh *mesh, INode *nde)
 			for (int d = 0; d < bonesids.size(); d++)
 			{
 				UCVector4 bns;
-				bonesids[d]->Evaluate(bonesids[d], v, &bns);
+				bonesids[d]->Evaluate(v, &bns);
 
 				Vector4 wts;
-				weights[d]->Evaluate(weights[d], v, &wts);
+				weights[d]->Evaluate(v, &wts);
 
 				for (int s = 0; s < 4; s++)
 				{
@@ -679,73 +686,72 @@ void LoadSkin(AmfMesh *mesh, INode *nde)
 
 void ApexImp::ApplyDeform(AmfMesh *mesh, INodeSuffixer &nde)
 {
-	const int numNodes = static_cast<int>(mesh->spritePositions.size());
+	const int numRemaps = mesh->GetNumRemaps();
+	AmfMesh::DescriptorCollection decs = mesh->GetDescriptors();
 
-	if (numNodes)
+	if (mesh->GetRemapType() == REMAP_TYPE_SPRITE)
 	{
 		LoadSpriteData(mesh, nde);
 
-		if (numNodes > 1)
+		if (numRemaps > 1)
 			nde.UseSkin();
 
 		goto _ApplyDeformNameNode;
-	}
+	}	
 
-	for (auto &d : mesh->streamAttributes)
-		if (d.Header.usage == AmfUsage_DeformNormal_c)
+	for (auto &d : decs)
+		if (d->usage == AmfUsage_DeformNormal_c)
 		{
 			LoadDeform(mesh, nde);
 			nde.UseMorph();
 			goto _ApplyDeformNameNode;
 		}
 
-	if (mesh->boneIndexLookup.size() > 1)
+	if (numRemaps > 1)
 	{
 		LoadSkin(mesh, nde);
 		nde.UseSkin();
 	}
-	else if (mesh->boneIndexLookup.size() > 0)
+	else if (numRemaps > 0)
 	{
-		INode *cnde = iBoneScanner.LookupNode(mesh->boneIndexLookup[0]);
+		INode *cnde = iBoneScanner.LookupNode(mesh->GetRemap(0));
 
 		if (cnde)
 			cnde->AttachChild(nde);
 	}
 
 _ApplyDeformNameNode:
-	TSTRING ndeName = static_cast<TSTRING>(esString(mesh->subMeshes[0].meshName->string));
+	TSTRING ndeName = static_cast<TSTRING>(esString(mesh->GetSubMeshName(0)));
 
 	if (flags[IDC_CH_DEBUGNAME_checked])
 	{
-		TSTRING className = static_cast<TSTRING>(esString(mesh->meshType->string));
+		TSTRING className = static_cast<TSTRING>(esString(mesh->GetMeshType()));
 		ndeName.append(nde.Generate(&className));
 	}
 
 	nde.node->SetName(ToBoneName(ndeName));
 }
 
+
 void DumpMaterialProps(AmfMaterial *mat)
 {
-	if (!mat->attributes)
-		return;
+	ReflectorPtr attributtes = mat->GetReflectedAttributes();
 
-	Reflector *refl = dynamic_cast<Reflector*>(mat->attributes);
-
-	if (!refl)
+	if (!attributtes)
 		return;
 	
-	const int numReflValues = refl->GetNumReflectedValues();
+	const int numReflValues = attributtes->GetNumReflectedValues();
 
 	if (!numReflValues)
 		return;
 
-	printer << esString(mat->name->string) << " attributes: " >> 1;
+	printer << mat->GetName() << " attributes: " >> 1;
 
 	for (int t = 0; t < numReflValues; t++)
 	{
-		const Reflector::KVPair &pair = refl->GetReflectedPair(t);
+		const Reflector::KVPair &pair = attributtes->GetReflectedPair(t);
 
-		printer << '\t' << esString(pair.name) << " = " << esString(pair.value) >> 1;
+		printer << '\t' << pair.name << " = " << pair.value.c_str() >> 1;
 	}
 }
 
@@ -768,72 +774,78 @@ int ApexImp::LoadModel(IADF *adf)
 	std::map<ApexHash, Mtl*> materials;
 
 	if (_test)
-		for (auto &m : mod->materials)
+	{
+		const int numMaterials = mod->GetNumMaterials();
+
+		for (int m = 0; m < numMaterials; m++)
 		{
-			bool forced = m->materialType == AmfMaterial::MaterialType_PBR && flags[IDC_CH_FORCESTDMAT_checked];
+			AmfMaterial::Ptr cmat = mod->GetMaterial(m);
+
+			bool forced = cmat->GetMaterialType() == MaterialType_PBR && flags[IDC_CH_FORCESTDMAT_checked];
 
 			if (forced)
-				m->materialType = AmfMaterial::MaterialType_Traditional;
+				cmat->MaterialType() = MaterialType_Traditional;
 
-			Mtl *cMat = CreateMaterial(m);
+			Mtl *cMat = CreateMaterial(cmat.get());
 
 			if (flags[IDC_CH_ENABLEVIEWMAT_checked])
 				GetCOREInterface()->ActivateTexture(cMat, cMat);
 
-			materials[m->name->hash] = cMat;
+			materials[cmat->GetNameHash()] = cMat;
 
 			if (flags[IDC_CH_DUMPMATINFO_checked])
-				DumpMaterialProps(m);
+				DumpMaterialProps(cmat.get());
 
 			if (forced)
-				m->materialType = AmfMaterial::MaterialType_PBR;
+				cmat->MaterialType() = MaterialType_PBR;
 		}
+	}
 
-	for (auto &lod : msh->lodGroups)
+	const int numLODGroups = msh->GetNumLODs();
+
+	for (int ld = 0; ld < numLODGroups; ld++)
 	{
 		MSTR layName = L"LOD";
-		layName.append(ToTSTRING(lod.Header.index).c_str());
+		layName.append(ToTSTRING(msh->GetLodIndex(ld)).c_str());
 
 		ILayer *currLayer = manager->GetLayer(layName);
 
 		if (!currLayer)
 			currLayer = manager->CreateLayer(layName);
 
-		int curMesh = 0;
+		const int numLodMeshes = msh->GetNumLODMeshes(ld);
 
-		for (auto &m : lod.meshes)
+		for (int m = 0; m < numLodMeshes; m++)
 		{
-			INodeSuffixer nde = LoadMesh(&m);
+			AmfMesh::Ptr cmsh = msh->GetLODMesh(ld, m);
+			INodeSuffixer nde = LoadMesh(cmsh.get());
 
 			if (!nde.node)
 			{
-				TSTRING ndeName = static_cast<TSTRING>(esString(m.subMeshes[0].meshName->string));
-				printerror("[Apex] Couldn't import model: ", << ndeName << " LOD: " << lod.Header.index);
+				printerror("[Apex] Couldn't import model: ", << cmsh->GetSubMeshName(0) << " LOD: " << msh->GetLodIndex(ld));
 				continue;
 			}
 
-			if (m.subMeshes.size() > 1)
+			const int numSubMeshes = cmsh->GetNumSubMeshes();
+
+			if (numSubMeshes > 1)
 			{
 				MultiMtl *mtl = NewDefaultMultiMtl();
-				mtl->SetNumSubMtls(static_cast<int>(m.subMeshes.size()));
+				mtl->SetNumSubMtls(numSubMeshes);
 
-				int curMat = 0;
-
-				for (auto &s : m.subMeshes)
-					if (materials.count(s.meshName->hash))
+				for (int s = 0; s < numSubMeshes; s++)
+					if (materials.count(cmsh->GetSubMeshNameHash(s)))
 					{
-						mtl->SetSubMtl(curMat, materials[s.meshName->hash]);
-						curMat++;
+						mtl->SetSubMtl(s, materials[cmsh->GetSubMeshNameHash(s)]);
 					}
 
 				nde.node->SetMtl(mtl);
 			}
-			else if (materials.count(m.subMeshes[0].meshName->hash))
-				nde.node->SetMtl(materials[m.subMeshes[0].meshName->hash]);
+			else if (materials.count(cmsh->GetSubMeshNameHash(0)))
+				nde.node->SetMtl(materials[cmsh->GetSubMeshNameHash(0)]);
 
-			ApplyDeform(&m, nde);
+			ApplyDeform(cmsh.get(), nde);
 			currLayer->AddToLayer(nde);
-			curMesh++;
 		}
 	}
 
@@ -842,14 +854,19 @@ int ApexImp::LoadModel(IADF *adf)
 
 int ApexImp::LoadStuntArea(IADF *adf)
 {
-	ADFStuntAreas *are = adf->FindInstance<ADFStuntAreas>();
+	StuntAreas_wrap *are = adf->FindInstance<StuntAreas_wrap>();
 
-	if (!are || !are->numStuntAreas)
+	if (!are)
 		return FALSE;
 
-	for (int a = 0; a < are->numStuntAreas; a++)
+	StuntAreas *areas = are->Data();
+
+	if (!areas->numStuntAreas)
+		return FALSE;
+
+	for (int a = 0; a < areas->numStuntAreas; a++)
 	{
-		StuntArea &area = are->stuntAreas[a];
+		StuntArea &area = areas->stuntAreas[a];
 
 		TriObject *obj = CreateNewTriObject();
 		Mesh *msh = &obj->GetMesh();
@@ -878,10 +895,10 @@ int ApexImp::LoadStuntArea(IADF *adf)
 
 		INode *nde = GetCOREInterface()->CreateObjectNode(obj);
 		TSTRING boneName = _T("ASA_");
-		boneName += esString(area.name.str->string);
+		boneName += esString(area.name.string.cPtr);
 		nde->SetName(ToBoneName(boneName));
 
-		boneName = esString(area.partName.str->string);
+		boneName = esString(area.partName.string.cPtr);
 
 		INode *parent = iBoneScanner.LookupNode(boneName);
 		parent->AttachChild(nde);
@@ -912,7 +929,7 @@ int ApexImp::DoImport(const TCHAR* filename, ImpInterface* /*importerInt*/, Inte
 		return FALSE;
 
 	if (!LoadStuntArea(adf))
-		return LoadModel(adf);
+		LoadModel(adf);
 
 	setlocale(LC_NUMERIC, oldLocale);
 

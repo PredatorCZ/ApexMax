@@ -10,43 +10,34 @@
     <Filter Include="Headers">
       <UniqueIdentifier>{ada31279-8f32-451b-897b-0098db7e1352}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source\Import">
-      <UniqueIdentifier>{f3ae4740-a741-4245-91fc-11c2edc2213f}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Headers\Import">
-      <UniqueIdentifier>{49a05cfc-0b4b-45eb-82c9-331b5d494787}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="3rd_party\ApexLib\3rd_party\PreCore\MAXex\win\About.rc">
       <Filter>Resources</Filter>
     </ResourceCompile>
-    <ResourceCompile Include="import\ApexImp.rc">
+    <ResourceCompile Include="src\ApexImp.rc">
       <Filter>Resources</Filter>
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="import\ApexImp.cpp">
-      <Filter>Source\Import</Filter>
+    <ClCompile Include="src\ApexImp.cpp">
+      <Filter>Source</Filter>
     </ClCompile>
-    <ClCompile Include="import\ApexImport.cpp">
-      <Filter>Source\Import</Filter>
+    <ClCompile Include="src\ApexMat.cpp">
+      <Filter>Source</Filter>
     </ClCompile>
-    <ClCompile Include="import\ApexMat.cpp">
-      <Filter>Source\Import</Filter>
+    <ClCompile Include="src\DllEntry.cpp">
+      <Filter>Source</Filter>
     </ClCompile>
-    <ClCompile Include="DllEntry.cpp">
+    <ClCompile Include="src\ApexMax.cpp">
       <Filter>Source</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="import\ApexImport.h">
-      <Filter>Headers\Import</Filter>
+    <ClInclude Include="src\ApexMax.h">
+      <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="import\resource.h">
-      <Filter>Headers\Import</Filter>
-    </ClInclude>
-    <ClInclude Include="ApexMax.h">
+    <ClInclude Include="src\resource.h">
       <Filter>Headers</Filter>
     </ClInclude>
   </ItemGroup>
