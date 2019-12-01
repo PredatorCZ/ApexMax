@@ -57,6 +57,10 @@
       <Configuration>2018</Configuration>
       <Platform>x64</Platform>
     </ProjectConfiguration>
+    <ProjectConfiguration Include="2020|x64">
+      <Configuration>2020</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="3rd_party\ApexLib\3rd_party\PreCore\MAXex\win\About.rc" />
