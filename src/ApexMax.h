@@ -35,12 +35,9 @@
 #include <matrix3.h>
 
 #include "ApexApi.h"
+#include "../project.h"
 
-#define APEXMAX_VERSION_MAJOR 1
-#define APEXMAX_VERSION_MINOR 6
-
-#define APEXMAX_VERSION APEXMAX_VERSION_MAJOR##.##APEXMAX_VERSION_MINOR
-static constexpr int APEXMAX_VERSIONINT = APEXMAX_VERSION_MAJOR * 100 + APEXMAX_VERSION_MINOR;
+static constexpr int APEXMAX_VERSIONINT = ApexMax_VERSION_MAJOR * 100 + ApexMax_VERSION_MINOR;
 
 extern HINSTANCE hInstance;
 

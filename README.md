@@ -1,22 +1,19 @@
 # ApexMax
+
 ApexMax is Apex Engine importer for 3ds Max. Buildable under VS2015.
 
-Supported 3ds max versions: **2012 - 2019**
+Supported 3ds max versions: **2012 - 2020**
 
 Tested on 3ds max versions: **2017**
 
-## Editing .vcxproj
-All essential configurations are within **PropertyGroup Label="MAXConfigurations"** field.
-- **MaxSDK**: changes path where is your MAX SDK installation.
-If your MAX SDK installation is somewhere else than default path stated in this field, you can edit it here.
-- **MaxDebugConfiguration**: changes 3ds max version and platform, so all necessary files are copied into plugin directory, this will enable post-build event.
+## Building
 
-## Post-build event
-Change 3ds max installation path (Default is C:\Program Files\Autodesk\). Do not change anything else unless you know what you're doing!
+Head to the [Building a 3ds max CMake projects](https://github.com/PredatorCZ/PreCore/wiki/Building-a-3ds-max-CMake-projects) wiki page.
 
-### [Latest Release](https://github.com/PredatorCZ/ApexMax/releases/)
+## [Latest Release](https://github.com/PredatorCZ/ApexMax/releases/)
 
 ## License
+
 This plugin is available under GPL v3 license. (See LICENSE.md)
 
 This plugin uses following libraries:

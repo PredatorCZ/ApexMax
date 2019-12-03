@@ -117,7 +117,7 @@ const TCHAR *ApexImp::Ext(int n)
 
 const TCHAR *ApexImp::LongDesc()
 {
-	return _T("Apex Inport");
+	return _T("Apex Import");
 }
 	
 const TCHAR *ApexImp::ShortDesc() 
@@ -127,12 +127,12 @@ const TCHAR *ApexImp::ShortDesc()
 
 const TCHAR *ApexImp::AuthorName()
 {			
-	return _T("Lukas Cone");
+	return _T(ApexMax_AUTHOR);
 }
 
 const TCHAR *ApexImp::CopyrightMessage() 
 {	
-	return _T("Copyright (C) 2014-2019 Lukas Cone");
+	return _T(ApexMax_COPYRIGHT);
 }
 
 const TCHAR *ApexImp::OtherMessage1() 
@@ -805,7 +805,7 @@ int ApexImp::LoadModel(IADF *adf)
 
 	for (int ld = 0; ld < numLODGroups; ld++)
 	{
-		MSTR layName = L"LOD";
+		MSTR layName = _T("LOD");
 		layName.append(ToTSTRING(msh->GetLodIndex(ld)).c_str());
 
 		ILayer *currLayer = manager->GetLayer(layName);

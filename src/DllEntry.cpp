@@ -49,7 +49,7 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL,ULONG fdwReason,LPVOID /*lpvReserved*/)
 // could purchase the DLL if they don't have it.
 __declspec( dllexport ) const TCHAR* LibDescription()
 {
-	return _T("Apex Engine unofficial plugin");
+	return _T(ApexMax_DESC);
 }
 
 // This function returns the number of plug-in classes this DLL

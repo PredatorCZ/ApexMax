@@ -28,12 +28,8 @@ const Matrix3 corMat =
 	Point3{ 0.f, 0.f, 0.f } 
 };
 
-#define QUOTE(x) #x
-#define CATTEDTEXT(x) QUOTE(x)
-#define APEXMAX_VERSION_S CATTEDTEXT(APEXMAX_VERSION)
-
 const TCHAR _name[] = _T("Apex Tool");
-const TCHAR _info[] = _T("\nCopyright (C) 2014-2019 Lukas Cone\nVersion ") APEXMAX_VERSION_S;
+const TCHAR _info[] = _T("\n" ApexMax_COPYRIGHT "\nVersion " ApexMax_VERSION);
 const TCHAR _license[] = _T("Apex Tool uses ApexLib, Copyright(C) 2014-2019 Lukas Cone.");
 const TCHAR _homePage[] = _T("https://lukascone.wordpress.com/2019/02/22/apex-engine-plugin");
 
@@ -92,7 +88,7 @@ static INT_PTR CALLBACK DialogCallbacks(HWND hWnd, UINT message, WPARAM wParam, 
 		imp->hWnd = hWnd;
 		imp->LoadCFG();
 		SetupIntSpinner(hWnd, IDC_SPIN_SCALE, IDC_EDIT_SCALE, 0, 5000, imp->IDC_EDIT_SCALE_value);
-		SetWindowText(hWnd, _T("Apex Import v") APEXMAX_VERSION_S);
+		SetWindowText(hWnd, _T("Apex Import v" ApexMax_VERSION));
 		return TRUE;
 
 	case WM_CLOSE:
